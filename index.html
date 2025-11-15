@@ -80,14 +80,26 @@
     }
   </style>
 
-  <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#0f172a">
+  <!-- PWA Meta -->
+  <link rel="manifest" href="manifest.json">
 
-  <!-- iOS support -->
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="theme-color" content="#0a4fa4">  
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="PARQUET APP">
+
+  <!-- Icons -->
+  <link rel="icon" href="icon-192.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="icon-512.png">
+
+  <!-- Register Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .catch(err => console.error('SW registration failed:', err));
+      });
+    }
+  </script>
 
 </head>
 <body>
@@ -1213,13 +1225,6 @@ showPage('page2'); // default landing
    Expose for debugging (optional)
    =========================== */
 window.__GP = { pages, showPage, buildMenu, serverPost };
-</script>
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js")
-    .then(() => console.log("Service worker registered"))
-    .catch(err => console.error("SW registration failed", err));
-}
 </script>
 </body>
 </html>
