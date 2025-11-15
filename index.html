@@ -1,0 +1,1225 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <title>GestionParquet — Application</title>
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#c1c7d0; --accent:#1e90ff; --success:#10b981; --danger:#ef4444;
+      --glass: rgba(255,255,255,0.03);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#071028 0%, #071827 100%);color:#e6eef8}
+    .app{max-width:1200px;margin:18px auto;padding:18px}
+    header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+    header h1{font-size:20px;margin:0}
+    .layout{display:grid;grid-template-columns:260px 1fr;gap:16px}
+    nav{background:var(--glass);padding:12px;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.6)}
+    nav ul{list-style:none;margin:0;padding:0}
+    nav li{padding:8px 10px;border-radius:8px;cursor:pointer;position:relative;user-select:none}
+    nav li:hover{background:rgba(255,255,255,0.02)}
+    nav li.active{background:linear-gradient(90deg, rgba(30,144,255,0.12), rgba(16,185,129,0.04));border-left:3px solid var(--accent)}
+    nav ul ul{display:none;margin-left:10px;padding-left:8px;border-left:1px dashed rgba(255,255,255,0.02)}
+    nav li.open > ul{display:block}
+    .caret{position:absolute;right:10px;top:10px;font-size:12px;opacity:0.8}
+    main{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:16px;border-radius:12px;min-height:70vh;position:relative}
+    .card{background:rgba(255,255,255,0.02);padding:12px;border-radius:10px}
+    form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type="text"],input[type="email"],input[type="date"],select,textarea,input[type="number"]{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+    textarea{min-height:100px;resize:vertical}
+    .full{grid-column:1/3}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;border:0;background:var(--accent);color:#07203a;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+    .muted{color:var(--muted);font-size:13px}
+    .row{display:flex;gap:8px}
+    .two-col{display:flex;gap:8px}
+    .notice{padding:8px;border-radius:6px;background:rgba(255,255,255,0.02);border-left:4px solid rgba(255,255,255,0.03)}
+    .split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .hidden{display:none}
+    footer{margin-top:12px;color:var(--muted);font-size:13px}
+    .error{color:var(--danger);font-size:13px}
+    .success{color:var(--success);font-size:13px}
+
+    /* Modal styling (centered) */
+    #modalOverlay{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(2,6,23,0.6);
+      z-index:998;
+    }
+    #modal{
+      display:none;
+      background:rgba(15,23,36,0.98);
+      backdrop-filter:blur(4px);
+      position:fixed;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      z-index:999;
+      width:92%;
+      max-width:920px;
+      padding:18px;
+      border-radius:12px;
+      box-shadow:0 10px 40px rgba(2,6,23,0.8);
+      color:#e6eef8;
+      max-height:86vh;
+      overflow:auto;
+    }
+    #modal .modal-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    #modal .modal-body{margin-top:12px}
+    #modal .modal-footer{margin-top:12px;text-align:right}
+    @media (max-width:800px){
+      .layout{grid-template-columns:1fr}
+      nav{order:2}
+      main{order:1}
+    }
+  </style>
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0f172a">
+
+  <!-- iOS support -->
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PARQUET APP">
+
+</head>
+<body>
+  <div id="loginScreen" style="padding:20px;max-width:400px;margin:auto;">
+    <h2 style="text-align:center;">Connexion sécurisée</h2>
+
+    <label>Initial :</label>
+    <input id="loginInitial" type="text" placeholder="ABC" style="width:100%;margin-bottom:12px;text-transform:uppercase;">
+
+    <label>Mot de passe :</label>
+    <input id="loginPwd" type="password" style="width:100%;margin-bottom:12px;">
+
+    <button onclick="login()" class="btn" style="width:100%;">Se connecter</button>
+  </div>
+  <div id="appMain" style="display:none;">
+
+  <div class="app">
+    <header>
+      <h1>GESTION DOSSIERS DU PARQUET  /  PGI DE KIKWIT</h1>  
+      <div class="muted">  </div>
+    </header>
+
+    <div class="layout">
+      <nav id="menu"></nav>
+      <main id="main">
+        <div id="pageContainer"></div>
+      </main>
+    </div>
+
+    <footer>
+      <div class="muted"> <i><span style="color: rgb(10, 138, 230);">Note : Cette application a été conçue et développée par le Magistrat Nsolotshi Malangu Solbena.</span> </i> <a href="mailto:nsolotshi3@gmail.com" style="text-decoration: none;">
+        <button style="background-color: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 5px; font-size: 10px;">
+          <i class="fas fa-envelope" style="margin-right: 8px;"></i> Envoyer un e-mail
+        </button>
+      </a>
+      </div> 
+    </footer>
+    </div>
+
+  <!-- Modal / Overlay -->
+  <div id="modalOverlay"></div>
+  <div id="modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-header">
+      <strong id="modalTitle">Titre</strong>
+      <div><button id="modalClose" class="btn ghost">Fermer</button></div>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+  </div>
+
+<script>
+/* ===========================
+   CONFIG
+   =========================== */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxPrpYRQfkwnoLjtCuA16JbuwGiPaPYnaUX16vgx8NTRr8BDuSO1RPhp0GkZHbAdI/exec'; // ex: https://script.google.com/macros/s/.../exec
+const SECRET_TOKEN = 'Nsolotshi09Kashibo'; // doit être identique au SECRET_TOKEN_SERVER côté GAS
+let ACCESS_INITIAL = null;      // l'initial autorisé
+let ACCESS_INDEX = null;        // index dans CV6:CV
+
+/* ===========================
+   Login function
+   =========================== */
+async function login() {
+  const initial = document.getElementById('loginInitial').value.trim().toUpperCase();
+  const pwd = document.getElementById('loginPwd').value.trim();
+
+  if (!initial || !pwd) {
+    alert("Veuillez remplir les deux champs.");
+    return;
+  }
+
+  const resp = await serverPost({action:'login', initial:initial, password:pwd});
+
+  if (!resp || !resp.ok) {
+    alert(resp.msg || "Erreur de connexion");
+    return;
+  }
+
+  ACCESS_INITIAL = initial;
+  ACCESS_INDEX = resp.data.index;  // utile pour l’exception CV6
+
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("appMain").style.display = "block";
+}
+
+/* ===========================
+   Load Master Initials
+   =========================== */
+let MASTER_INITIAL = null;
+
+async function loadMasterInitial() {
+  const resp = await serverPost({action:'getMasterInitial'});
+  if (resp && resp.ok) MASTER_INITIAL = resp.data;
+}
+loadMasterInitial();
+
+
+/* ===========================
+   Helpers DOM
+   =========================== */
+const qs = s => document.querySelector(s);
+const qsa = s => Array.from(document.querySelectorAll(s));
+function el(tag, attrs={}, children=[]){
+  const e = document.createElement(tag);
+  for(const k in attrs){
+    if(k==='class') e.className = attrs[k];
+    else if(k==='html') e.innerHTML = attrs[k];
+    else e.setAttribute(k, attrs[k]);
+  }
+  if(typeof children === 'string') e.textContent = children;
+  else (children||[]).forEach(c => e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c));
+  return e;
+}
+
+/* ===========================
+   Lightweight server POST (GAS)
+   - application/x-www-form-urlencoded expected
+   =========================== */
+async function serverPost(params){
+  params.token = SECRET_TOKEN;
+  const body = new URLSearchParams();
+  for(const k in params) body.append(k, params[k]);
+  const resp = await fetch(SCRIPT_URL, {
+    method: 'POST',
+    headers: {'Content-Type':'application/x-www-form-urlencoded'},
+    body: body.toString()
+  });
+  const text = await resp.text();
+  try { return JSON.parse(text); } catch(e) { return {ok:false, msg:'Réponse non JSON', raw:text}; }
+}
+
+/* ===========================
+   Pages descriptor (COMPLET)
+   (Conserve toutes les pages/fonctions demandées)
+   =========================== */
+const pages = [
+  {id:'page2', title:'Ajouter un Magistrat (X)', fields:[
+    {id:'X1',label:'Nom complet',type:'text',required:true},
+    {id:'X2',label:'Matricule (1 lettre + 6 chiffres)',type:'text',required:true,pattern:'^[A-Za-z]{1}\\d{6}$',hint:'ex: A123456'},
+    {id:'X3',label:'Grade actuel',type:'select',required:true,options:[
+      'Substitut du procureur de la République','Premier substitut du procureur de la République','Procureur de la République','Substitut du Procureur Général','Avocat général près la Cour d\'appel','Procureur général près la Cour d\'appel','Avocat général près la Cour de cassation','Premier Avocat général près la Cour de cassation','Procureur général près la Cour de Cassation'
+    ]},
+    {id:'X4',label:'N° Téléphone (9 chiffres)',type:'text',required:true,pattern:'^\\d{9}$'},
+    {id:'X5',label:'Adresse électronique',type:'email',required:true},
+    {id:'X6',label:'Initial (3 lettres MAJ)',type:'text',required:true,pattern:'^[A-Z]{3}$',serverCheck:{action:'checkInitialUnique',column:'CV'}},
+    {id:'X7',label:'Parquet d\'attache',type:'select',required:true,options:['Parquet de grande Instance de Kikwit']},
+    {id:'X8',label:'Mot de passe utilisateur (5 caractères)',type:'text',required:true,pattern:'^.{5}$'},
+    {id:'X9',label:'Date de prise de fonction',type:'date',required:true,maxToday:true}
+  ], submit:{type:'addMagistrate'} },
+
+  {id:'page3', title:'Inscription dossier RMP (Q)', fields:[
+    {id:'Q1',label:'Date d\'inscription',type:'date',required:true,maxToday:true},
+    {id:'Q2',label:'N° RMP (nombre/ABC)',type:'text',required:true,pattern:'^\\d+\\/[A-Z]{3}$',serverCheck:[
+      {action:'checkLettersExistInColumn',column:'CV'} , {action:'checkNotExists',column:'B'}
+    ]},
+    {id:'Q3',label:'Identité de l\'inculpé (ligne séparée)',type:'textarea',required:false,repeated:true},
+    {id:'Q4',label:'Prévention (ligne séparée)',type:'textarea',required:true,repeated:true}
+  ], submit:{type:'appendRange',rangeStart:'A',rangeEnd:'D',startRow:6,cols:['Q1','Q2','Q3','Q4']} },
+
+  {id:'page4', title:'Mandat d\'arrêt Provisoire (MAP)', fields:[
+    {id:'Q5',label:'N° RMP',type:'text',required:true,pattern:'^\\d+\\/[A-Z]{3}$'},
+    {id:'Q6',label:'NOM DE L\'INCULPÉ',type:'text',required:true,
+      serverCheck:{action:'checkRMPAndInculpeMAP', rmpField:'Q5', inculpeField:'Q6'}},
+    {id:'Q7',label:'SEXE',type:'select',required:true,options:['HOMME','FEMME']},
+    {id:'Q8',label:'DATE DE NAISSANCE',type:'date',required:true,maxToday:true,computeAge:true},
+    {id:'Q9', label:'NATIONALITÉ', type:'text', required:true, defaultValue:'Congolaise RDC'},
+    {id:'Q10',label:'PROFESSION',type:'text',required:false},
+    {id:'Q11',label:'PREVENTION',type:'textarea',required:true,repeated:true},
+    {id:'Q12',label:'DATE DE MAP',type:'date',required:true,maxToday:true}
+  ], submit:{type:'appendRange',rangeStart:'U',rangeEnd:'AB',startRow:6,cols:['Q5','Q6','Q7','Q8','Q9','Q10','Q11','Q12']} },
+
+  {id:'page5', title:'Ordonnance de détention préventive (ODP)', fields:[
+    {id:'Q13',label:'N° RMP',type:'text',required:true,pattern:'^\\d+\\/[A-Z]{3}$',serverCheck:{action:'mustExistInColumn',column:'U'}},
+    {id:'Q14',label:'Nom inculpé (sélectionnée)',type:'select',required:true,optionsSource:{byRMPColumn:'U',targetColumn:'V'}},
+    {id:'Q15',label:'DATE DE MAP (auto)',type:'date',readonly:true,autoFrom:{matchColumn:'U',matchFromInput:'Q13',returnColumn:'AB'}},
+    {id:'Q16',label:'DATE DE L\'ODP',type:'date',required:true,dependsOn:{minDateField:'Q15'}}
+  ], submit:{type:'updateForRow',matchColumn:'U',matchField:'Q13',targetColumn:'AC',fieldToWrite:'Q16'} },
+
+  {id:'page6', title:'Ordonnance de confirmation de détention (OC)', fields:[
+    {id:'Q17',label:'N° RMP',type:'text',required:true,pattern:'^\\d+\\/[A-Z]{3}$',serverCheck:{action:'mustExistInColumn',column:'U'}},
+    {id:'Q18',label:'Nom inculpé',type:'select',required:true,optionsSource:{byRMPColumn:'U',targetColumn:'V'}},
+    {id:'Q19',label:'DATE DE MAP (auto)',type:'date',readonly:true,autoFrom:{matchColumn:'U',matchFromInput:'Q17',returnColumn:'AB'}},
+    {id:'Q20',label:'DATE DE L\'ODP (auto)',type:'date',readonly:true,autoFrom:{matchColumn:'U',matchFromInput:'Q17',returnColumn:'AC',required:true}},
+    {id:'Q21',label:'DATE OC PRÉCÉDENTE S\'IL Y EN A',type:'date',readonly:true,autoFrom:{matchColumn:'U',matchFromInput:'Q17',returnColumn:'AE'}},
+    {id:'Q22',label:'DATE DE L\'OC À ENREGISTRER',type:'date',required:true,dependsOn:{minDateField:['Q21','Q20']}}
+  ], submit:{type:'updateForRowPrepend',matchColumn:'U',matchField:'Q17',targetColumn:'AD',fieldToWrite:'Q22'} },
+
+  {id:'page7', title:'Ordonnance de mise en liberté provisoire (OMLP)', fields:[
+    {id:'Q23',label:'N° RMP',type:'text',required:true,pattern:'^\\d+\\/[A-Z]{3}$',serverCheck:{action:'mustExistInColumn',column:'U'}},
+    {id:'Q24',label:'Nom inculpé',type:'select',required:true,optionsSource:{byRMPColumn:'U',targetColumn:'V'}},
+    {id:'Q25',label:'DATE DE LA LIBERTÉ PROVISOIRE',type:'date',required:true,maxToday:true}
+  ], submit:{type:'updateForRow',matchColumn:'U',matchField:'Q23',targetColumn:'AF',fieldToWrite:'Q25'} },
+
+  {id:'page8', title:'Ordonnance de mainlevée de détention (OMLD)', fields:[
+    {id:'Q26',label:'N° RMP',type:'text',required:true,pattern:'^\\d+\\/[A-Z]{3}$',serverCheck:{action:'mustExistInColumn',column:'U'}},
+    {id:'Q27',label:'Nom inculpé',type:'select',required:true,optionsSource:{byRMPColumn:'U',targetColumn:'V'}},
+    {id:'Q28',label:'DATE DE LA MAINLEVÉE',type:'date',required:true,maxToday:true}
+  ], submit:{type:'updateForRow',matchColumn:'U',matchField:'Q26',targetColumn:'AG',fieldToWrite:'Q28'} },
+
+  {id:'page9', title:'Mandat d\'élargissement (ME)', fields:[
+    {id:'Q29',label:'N° RMP',type:'text',required:true,pattern:'^\\d+\\/[A-Z]{3}$',serverCheck:{action:'mustExistInColumn',column:'U'}},
+    {id:'Q30',label:'NOM DE L\'INCULPÉ',type:'select',required:true,optionsSource:{byRMPColumn:'U',targetColumn:'V'}},
+    {id:'Q31',label:'DATE D\'ÉLARGISSEMENT',type:'date',required:true,maxToday:true}
+  ], submit:{type:'updateForRow',matchColumn:'U',matchField:'Q29',targetColumn:'AH',fieldToWrite:'Q31'} },
+
+  {id:'page10', title:'Evasion du détenu préventif', fields:[
+    {id:'Q32',label:'N° RMP',type:'text',required:true,pattern:'^\\d+\\/[A-Z]{3}$',serverCheck:{action:'mustExistInColumn',column:'U'}},
+    {id:'Q33',label:'NOM DE L\'INCULPÉ',type:'select',required:true,optionsSource:{byRMPColumn:'U',targetColumn:'V'}},
+    {id:'Q34',label:'DATE DE L\'EVASION',type:'date',required:true,maxToday:true}
+  ], submit:{type:'updateForRow',matchColumn:'U',matchField:'Q32',targetColumn:'AI',fieldToWrite:'Q34'} },
+
+  {id:'page11', title:'Décès du détenu préventif', fields:[
+    {id:'Q35',label:'N° RMP',type:'text',required:true,pattern:'^\\d+\\/[A-Z]{3}$',serverCheck:{action:'mustExistInColumn',column:'U'}},
+    {id:'Q36',label:'NOM DE L\'INCULPÉ',type:'select',required:true,optionsSource:{byRMPColumn:'U',targetColumn:'V'}},
+    {id:'Q37',label:'DATE DE DÉCÈS',type:'date',required:true,maxToday:true}
+  ], submit:{type:'updateForRow',matchColumn:'U',matchField:'Q35',targetColumn:'AJ',fieldToWrite:'Q37'} },
+
+  {id:'page12', title:'Classement sans suite des dossiers RMP', fields:[
+    {id:'Q38',label:'N° RMP',type:'text',required:true,pattern:'^\\d+\\/[A-Z]{3}$',serverCheck:[{action:'mustExistInColumn',column:'B'},{action:'mustBeEmptyInColumn',column:'O'}]},
+    {id:'Q39',label:'Date de classement',type:'date',required:true,maxToday :true},
+    {id:'Q40',label:'Motif de classement',type:'select',required:true,options:[
+      'classé sans suite pour prescription de l\'action publique','classé sans suite pour décès de l\'inculpé','classé sans suite pour infraction non établie','classé sans suite pour fait non infractionnel','classé sans suite pour défaut ou insuffisance de preuves','classé sans suite pour conversion dans un autre dossier','classé sans suite pour inopportunité de poursuite','classé sans suite pour vétusté des faits','classé sans suite pour fait bénin','classé sans suite pour impossibilité de trouver l\'auteur'
+    ]},
+    {id:'Q41',label:'Observations',type:'textarea',required:false}
+  ], submit:{type:'appendRange',rangeStart:'AU',rangeEnd:'AX',startRow:6,cols:['Q38','Q39','Q40','Q41']} },
+
+  {id:'page13', title:'Classement par paiement amende (AT)', fields:[
+    {id:'Q42',label:'N° RMP',type:'text',required:true,pattern:'^\\d+\\/[A-Z]{3}$',serverCheck:[{action:'mustExistInColumn',column:'B'},{action:'mustBeEmptyInColumn',column:'O'}]},
+    {id:'Q43',label:'Date de classement',type:'date',required:true,maxToday:true},
+    {id:'Q44',label:'Montant amende (CDF)',type:'number',required:true},
+    {id:'Q45',label:'Observations',type:'textarea',required:false}
+  ], submit:{type:'appendRange',rangeStart:'BB',rangeEnd:'BE',startRow:6,cols:['Q42','Q43','Q44','Q45']} },
+
+  {id:'page14', title:'Communication dossier RMP à la hiérarchie', fields:[
+    {id:'Q46',label:'N° RMP',type:'text',required:true,pattern:'^\\d+\\/[A-Z]{3}$',serverCheck:[{action:'mustExistInColumn',column:'B'},{action:'mustBeEmptyInColumn',column:'O'}]},
+    {id:'Q47',label:'Date de communication',type:'date',required:true,maxToday:true},
+    {id:'Q48',label:'Autorité hiérarchique',type:'text',required:true},
+    {id:'Q49',label:'Observations',type:'textarea'}
+  ], submit:{type:'appendRange',rangeStart:'BI',rangeEnd:'BL',startRow:6,cols:['Q46','Q47','Q48','Q49']} },
+
+  {id:'page15', title:'Transmission dossier RMP à un autre parquet', fields:[
+    {id:'Q50',label:'N° RMP',type:'text',required:true,pattern:'^\\d+\\/[A-Z]{3}$',serverCheck:[{action:'mustExistInColumn',column:'B'},{action:'mustBeEmptyInColumn',column:'O'}]},
+    {id:'Q51',label:'Date de transmission',type:'date',required:true,maxToday:true},
+    {id:'Q52',label:'Parquet destinataire',type:'text',required:true},
+    {id:'Q53',label:'Observations',type:'textarea'}
+  ], submit:{type:'appendRange',rangeStart:'BP',rangeEnd:'BS',startRow:6,cols:['Q50','Q51','Q52','Q53']} },
+
+  {id:'page16', title:'Envoi dossier RMP à la juridiction de compétence', fields:[
+    {id:'Q54',label:'N° RMP',type:'text',required:true,pattern:'^\\d+\\/[A-Z]{3}$',serverCheck:[{action:'mustExistInColumn',column:'B'},{action:'mustBeEmptyInColumn',column:'O'}]},
+    {id:'Q55',label:'Date d\'envoi en fixation',type:'date',required:true,maxToday:true},
+    {id:'Q56',label:'Juridiction destinataire',type:'text',required:true},
+    {id:'Q57',label:'Observations',type:'textarea'}
+  ], submit:{type:'appendRange',rangeStart:'BW',rangeEnd:'BZ',startRow:6,cols:['Q54','Q55','Q56','Q57']} },
+
+  {id:'page17', title:'Inscription autres dossiers (RI/RT/RAT/RACJ/RAP/RECL/RFNI)', fields:[
+    {id:'Q58',label:'Date d\'inscription',type:'date',required:true,maxToday:true},
+    {id:'Q59',label:'Type de dossier',type:'select',required:true,options:['RI','RT','RAT','RAP','RACJ','RECL','RFNI']},
+    {id:'Q60',label:'N° dossier (nombre/ABC)',type:'text',required:true,pattern:'^\\d+\/[A-Z]{3}$',serverCheck:[{action:'checkLettersExistInColumn',column:'CV'},{action:'checkDuplicateQ59Q60', q59Field:'Q59', q60Field:'Q60'}]},
+    {id:'Q61',label:'Nom du plaignant/demandeur',type:'text',required:true},
+    {id:'Q62',label:'Nom accusé/défendeur',type:'text',required:false},
+    {id:'Q63',label:'Prévention / Objet',type:'textarea',required:true}
+  ], submit:{type:'appendRange',rangeStart:'CD',rangeEnd:'CI',startRow:6,cols:['Q58','Q59','Q60','Q61','Q62','Q63']} },
+
+  {
+    id:'page18',
+    title:'Clôture autres dossiers',
+    fields:[
+      {id:'Q64',label:'Type de dossier',type:'select',required:true,
+        options:['RI','RT','RAT','RAP','RACJ','RECL','RFNI']
+      },
+      {
+        id:'Q65',
+        label:'N° dossier',
+        type:'text',
+        required:true,
+        pattern:'^\\d+\\/[A-Z]{3}$',
+        serverCheck:{
+          action:'mustExistInColumnWithTypeAndEmpty',
+          columnCF:'CF',
+          columnCE:'CE',
+          columnCJ:'CJ',
+          typeField:'Q64'
+        }
+      },
+      {id:'Q66',label:'Date de clôture',type:'date',required:true,maxToday:true},
+      {id:'Q67',label:'Motif de clôture',type:'select',required:true,
+        options:[
+          'converti dans un dossier RMP',
+          'classé sans suite',
+          'Envoyé devant la juridiction compétente',
+          'communiqué à la hiérarchie',
+          'transmis à un autre parquet'
+        ]
+      }
+    ],
+    submit:{type:'closeOtherDossier', typeField:'Q64', dossierField:'Q65', dateField:'Q66', motifField:'Q67'}
+  },
+
+  {id:'page19', title:'Rapport du parquet', fields:[
+    {id:'Q68',label:'Période date de départ',type:'date',required:true,maxToday:true},
+    {id:'Q69',label:'Période date d\'arrivée',type:'date',required:true,maxToday:true,dependsOn:{minDateField:'Q68'}},
+    {id:'Q70',label:'E-mail pour recevoir résultats',type:'email',required:true},
+    {id:'Q71',label:'Mot secret du parquet (doit correspondre J2)',type:'text',required:true,serverCheck:{action:'checkEqualsCell',sheetCell:'J2'}}
+  ], submit:{type:'setCells',targetCells:{D2:'Q68',E2:'Q69',F2:'Q70',G2:'Q71'}, postAction:{action:'generatePDFandEmail',emailField:'Q70'}} },
+
+
+  {id:'page20', title:'Rapport du Magistrat', fields:[
+      {id:'Q72', label:'Initial du magistrat', type:'select', required:true, optionsSource:{column:'CV'}},
+      {id:'Q73', label:'Période date départ', type:'date', required:true, maxToday:true},
+      {id:'Q74', label:'Période date arrivée', type:'date', required:true, maxToday:true, dependsOn:{minDateField:'Q73'}},
+      {id:'Q75', label:'E-mail pour recevoir résultats', type:'email', required:true},
+      {
+        id:'Q76',
+        label:'Mot de passe du Magistrat (5 caractères)',
+        type:'text',
+        required:true,
+        pattern:'^.{5}$',
+        serverCheck:{
+          action:'checkMagPasswordMatchesInitial',
+          initialField:'Q72'
+        }
+      }
+    ],
+    submit:{
+      type:'setCells',
+      targetCells:{Y2:'Q72', Z2:'Q73', AA2:'Q74', AB2:'Q75', AC2:'Q76'},
+      postAction:{action:'generatePDFandEmailToCell', targetCell:'AE2'}
+    }
+  },
+
+
+  {id:'page21', title:'Consulter dossier RMP', fields:[
+    {id:'Q77',label:'N° RMP',type:'text',required:true,pattern:'^\\d+\\/[A-Z]{3}$',serverCheck:{action:'mustExistInColumn',column:'B'}}
+  ], submit:{type:'consultRMP'} },
+
+  {id:'page22', title:'Rechercher un détenu', fields:[
+    {id:'Q78',label:'Nom complet du détenu',type:'text',required:true,serverCheck:{action:'mustExistInColumn',column:'V'}}
+  ], submit:{type:'searchDetenu'} },
+
+  {id:'page23', title:'Modifier identité / préventions dossier RMP', fields:[
+    {id:'Q79',label:'N° RMP',type:'text',required:true,pattern:'^\\d+\\/[A-Z]{3}$',serverCheck:{action:'mustExistInColumn',column:'B'}},
+    {id:'Q80',label:'Identité inculpés (modif)',type:'textarea',required:true,autoFrom:{matchColumn:'B',matchFromInput:'Q79',returnColumn:'C'},editable:true},
+    {id:'Q81',label:'Prévention (modif)',type:'textarea',required:true,autoFrom:{matchColumn:'B',matchFromInput:'Q79',returnColumn:'D'},editable:true}
+  ], submit:{type:'updateRowCells',matchColumn:'B',matchField:'Q79',updateMap:{C:'Q80',D:'Q81'}} },
+
+  {id:'page24', title:'Modifier le mot de passe utilisateur', fields:[
+    {id:'Q82',label:'Initial du magistrat',type:'select',required:true,optionsSource:{column:'CV'}},
+    {id:'Q83',label:'Ancien mot de passe',type:'text',required:true,pattern:'^.{5}$',serverCheck:{action:'checkPasswordMatchesInitial',initialField:'Q82'}},
+    {id:'Q84',label:'Nouveau mot de passe (5 caractères)',type:'text',required:true,pattern:'^.{5}$'}
+  ], submit:{type:'changeMagPassword',initialField:'Q82',newPwdField:'Q84'} },
+
+  // ===============================
+//   MENU CORRECTIONS (nouvelles pages)
+// ===============================
+{
+  id:'page25',
+  title:'Annuler la suite RMP',
+  fields:[
+    {id:'Q85', label:'N° RMP', type:'text', required:true, pattern:'^\\d+\\/[A-Z]{3}$',
+      serverCheck:{action:'checkRMPExistsInAnyColumn', columns:['AU','BB','BI','BP','BW']}
+    }
+  ],
+  submit:{type:'cancelSuiteRMP', rmpField:'Q85'}
+},
+
+{
+  id:'page26',
+  title:'Effacer N° RMP',
+  fields:[
+    {id:'Q86', label:'N° RMP à effacer', type:'text', required:true, pattern:'^\\d+\\/[A-Z]{3}$',
+      serverCheck:{action:'mustExistInColumn', column:'B'}}
+  ],
+  submit:{type:'deleteRMP', rmpField:'Q86'}
+},
+
+{
+  id:'page27',
+  title:'Remplacer N° RMP',
+  fields:[
+    {id:'Q87', label:'Ancien N° RMP', type:'text', required:true, pattern:'^\\d+\\/[A-Z]{3}$',
+      serverCheck:{action:'mustExistInColumn', column:'B'}},
+    {id:'Q88', label:'Nouveau N° RMP', type:'text', required:true, pattern:'^\\d+\\/[A-Z]{3}$',
+      serverCheck:{action:'mustNotExistInColumn', column:'B'}}
+  ],
+  submit:{type:'replaceRMP', oldField:'Q87', newField:'Q88'}
+},
+
+{
+  id:'page28',
+  title:'Modifier autre dossier',
+  fields:[
+    {id:'Q89', label:'Type de dossier', type:'select', required:true, options:[
+      'Registre d’information (RI)','Registre de tutelle (RT)','Registre d’amende transactionnelle (RAT)',
+      'Registre autre parquet (RAP)','Registre des avis communiqués à d’autres juridictions (RACJ)',
+      'Registre d’enfant en conflit avec la loi pénale (RECL)','Registre des faits non infractionnels (RFNI)'
+    ]},
+    {id:'Q90', label:'N° Dossier', type:'text', required:true, pattern:'^\\d+\\/[A-Z]{3}$'}
+  ],
+  submit:{type:'editAutreDossier', typeField:'Q89', numField:'Q90'}
+}
+
+
+];
+
+/* ===========================
+   Build Menu (with collapsible submenus)
+   - All submenus are collapsed by default
+   - Clicking a parent toggles its open state
+   - Clicking a child opens its page and marks active
+   =========================== */
+function buildMenu(){
+  const menu = qs('#menu');
+  menu.innerHTML = '';
+  const ul = el('ul');
+  const items = [
+    {id:'page2',label:'I. Ajouter un Magistrat'},
+    {id:'page3',label:'II. Inscription dossier RMP'},
+    {id:'dossier',label:'III. Détention',children:[
+      {id:'page4',label:'MAP'},{id:'page5',label:'ODP'},{id:'page6',label:'OC'},{id:'page7',label:'OMLP'},{id:'page8',label:'OMLD'},{id:'page9',label:'ME'},{id:'page10',label:'Evasion'},{id:'page11',label:'Décès'}
+    ]},
+    {id:'classif',label:'IV. Fin traitement RMP',children:[
+      {id:'page12',label:'Classement sans suite'},{id:'page13',label:'Classement AT'},{id:'page14',label:'Communication'},{id:'page15',label:'Transmission'},{id:'page16',label:'Envoi juridiction'}
+    ]},
+    {id:'page17',label:'V. Inscription autres dossiers'},{id:'page18',label:'VI. Clôture autres dossiers'},
+    {id:'reports',label:'VII. Commandes',children:[
+      {id:'page19',label:'Rapport parquet'},{id:'page20',label:'Rapport magistrat'},{id:'page21',label:'Consulter dossier RMP'},{id:'page22',label:'Rechercher détenu'}
+    ]},
+   { id:'corrections', label:'VIII. Corrections', children:[
+    {id:'page23', label:'Modification identité/prév'},
+    {id:'page24', label:'Modifier mot de passe'},
+    {id:'page25', label:'Annuler la suite RMP'},
+    {id:'page26', label:'Effacer N° RMP'},
+    {id:'page27', label:'Remplacer N° RMP'},
+    {id:'page28', label:'Modifier autre dossier'}
+    ]}
+
+  ];
+
+  items.forEach(it=>{
+    const li = el('li',{'data-id': it.id}, it.label);
+    if(it.children){
+      const caret = el('span',{class:'caret'},'▸');
+      li.appendChild(caret);
+      const sub = el('ul');
+      it.children.forEach(ch=>{
+        const cli = el('li',{'data-id': ch.id}, ch.label);
+        cli.onclick = (ev)=>{ ev.stopPropagation(); setActiveMenu(ch.id); showPage(ch.id); closeAllMenusExcept(null); };
+        sub.appendChild(cli);
+      });
+      // toggle open/close on parent click
+      li.onclick = (ev) => {
+        ev.stopPropagation();
+        li.classList.toggle('open');
+        // rotate caret visually
+        if(li.classList.contains('open')) caret.textContent = '▾'; else caret.textContent = '▸';
+      };
+      li.appendChild(sub);
+    } else {
+      li.onclick = ()=>{ setActiveMenu(it.id); showPage(it.id); closeAllMenusExcept(null); };
+    }
+    ul.appendChild(li);
+  });
+
+  menu.appendChild(ul);
+}
+function closeAllMenusExcept(exceptLi){
+  qsa('#menu li.open').forEach(li=>{
+    if(li !== exceptLi) {
+      li.classList.remove('open');
+      const caret = li.querySelector('.caret');
+      if(caret) caret.textContent = '▸';
+    }
+  });
+}
+function setActiveMenu(id){
+  qsa('#menu li').forEach(li => li.classList.remove('active'));
+  const active = qs('#menu li[data-id="'+id+'"]');
+  if(active) active.classList.add('active');
+}
+
+/* ===========================
+   Modal helpers (ensure single modal)
+   - closeExistingModal() is called before any new modal open
+   =========================== */
+const modalOverlay = qs('#modalOverlay');
+const modal = qs('#modal');
+const modalTitle = qs('#modalTitle');
+const modalBody = qs('#modalBody');
+const modalFooter = qs('#modalFooter');
+const modalCloseBtn = qs('#modalClose');
+
+function closeExistingModal(){
+  if(modal.style.display === 'block'){
+    modal.style.display = 'none';
+    modalOverlay.style.display = 'none';
+    modal.setAttribute('aria-hidden','true');
+    modalBody.innerHTML = '';
+    modalFooter.innerHTML = '';
+  }
+}
+function showModal(title, html, footerHtml){
+  closeExistingModal();
+  modalTitle.textContent = title || '';
+  modalBody.innerHTML = html || '';
+  modalFooter.innerHTML = footerHtml || '<button class="btn ghost" id="modalCancel">Annuler</button><button class="btn" id="modalConfirm">Confirmer</button>';
+  modalOverlay.style.display = 'block';
+  modal.style.display = 'block';
+  modal.setAttribute('aria-hidden','false');
+  // wire default buttons if present
+  const cancel = qs('#modalCancel'); if(cancel) cancel.onclick = hideModal;
+  const conf = qs('#modalConfirm'); if(conf) conf.onclick = ()=>{ /* no-op default */ };
+}
+function showModalHtml(html, footerHtml){
+  closeExistingModal();
+  modalTitle.textContent = '';
+  modalBody.innerHTML = html || '';
+  modalFooter.innerHTML = footerHtml || '<button class="btn ghost" id="modalCancel">Annuler</button>';
+  modalOverlay.style.display = 'block';
+  modal.style.display = 'block';
+  modal.setAttribute('aria-hidden','false');
+  const cancel = qs('#modalCancel'); if(cancel) cancel.onclick = hideModal;
+}
+function hideModal(){
+  closeExistingModal();
+}
+modalCloseBtn.onclick = hideModal;
+modalOverlay.onclick = hideModal;
+window.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') hideModal(); });
+
+/* ===========================
+   Page renderer: builds forms from descriptor
+   - Handles validations, autoFrom, serverCheck, dependent dates, etc.
+   - Before displaying review modal -> ensures old modal closed
+   =========================== */
+function showPage(pageId){
+  closeExistingModal();
+  const page = pages.find(p => p.id === pageId);
+  const container = qs('#pageContainer');
+  container.innerHTML = '';
+  if(!page){ container.appendChild(el('div',{},['Page non trouvée'])); return; }
+
+  setActiveMenu(pageId);
+
+  const card = el('div',{class:'card'});
+  const title = el('h2',{}, page.title);
+  card.appendChild(title);
+
+  // Create form
+  const form = el('form');
+  form.addEventListener('submit', async (ev)=>{ ev.preventDefault(); await handleSubmit(page, form); });
+
+  const fieldMap = {}; // id => input element
+
+  page.fields.forEach(f => {
+    const wrapper = el('div', {class: f.full ? 'full' : ''});
+    const label = el('label',{}, f.label + (f.required ? ' *' : ''));
+    wrapper.appendChild(label);
+
+    let input;
+    if(f.type === 'select'){
+      input = el('select');
+      // placeholder empty option
+      input.appendChild(el('option',{value:''},'-- sélectionnez --'));
+      if(f.options) f.options.forEach(o => input.appendChild(el('option',{value:o}, o)));
+    } else if(f.type === 'textarea'){
+      input = el('textarea');
+    } else if(f.type === 'date'){
+      input = el('input',{type:'date'});
+    } else if(f.type === 'number'){
+      input = el('input',{type:'number'});
+    } else {
+      input = el('input',{type: f.type === 'email' ? 'email' : 'text'});
+    }
+
+    if(f.defaultValue !== undefined){
+      input.value = f.defaultValue;
+    }
+    // attributes
+    if(f.readonly) input.setAttribute('readonly','true');
+    if(f.pattern) input.dataset.pattern = f.pattern;
+    if(f.hint) wrapper.appendChild(el('div',{class:'muted'}, f.hint));
+    // attach name for easy extraction
+    input.name = f.id;
+    wrapper.appendChild(input);
+    form.appendChild(wrapper);
+    fieldMap[f.id] = {field: f, input: input};
+  });
+
+  // buttons
+  const btnRow = el('div',{class:'full row', style:'justify-content:flex-end;align-items:center;margin-top:10px'});
+  const backBtn = el('button',{type:'button', class:'btn ghost'}, 'Retour au menu');
+  const reviewBtn = el('button',{type:'submit', class:'btn'}, 'Revoir & Envoyer');
+  backBtn.onclick = ()=>{ // collapse all menus, set default menu active
+    closeAllMenusExcept(null);
+    setActiveMenu(null);
+    // optionally show menu default page
+    showPage('page2');
+  };
+  btnRow.appendChild(backBtn);
+  btnRow.appendChild(reviewBtn);
+  form.appendChild(btnRow);
+
+  card.appendChild(form);
+  container.appendChild(card);
+
+  // Attach dynamic behaviours (autoFrom, optionsSource, computeAge, dependsOn)
+  page.fields.forEach(f=>{
+    const entry = fieldMap[f.id];
+    if(!entry) return;
+    const input = entry.input;
+
+    // optionsSource: fetch distinct column values
+    if(f.optionsSource && f.optionsSource.column){
+      (async ()=>{
+        try{
+          const r = await serverPost({action:'getDistinctColumnValues', column: f.optionsSource.column});
+          if(r && r.ok && r.data) {
+            r.data.forEach(v => input.appendChild(el('option',{value:v}, v)));
+          }
+        }catch(e){ console.warn('optionsSource error', e); }
+      })();
+    }
+
+    // autoFrom: when another field changes get value from server
+    if(f.autoFrom){
+      const sourceId = f.autoFrom.matchFromInput;
+      // watch change on that source if present in same form
+      const src = form.querySelector('[name="'+sourceId+'"]');
+      if(src){
+        src.addEventListener('change', async ()=>{
+          const val = src.value;
+          if(!val) { input.value = ''; return; }
+          const resp = await serverPost({action:'getCellByMatch', matchColumn: f.autoFrom.matchColumn, matchValue: val, returnColumn: f.autoFrom.returnColumn});
+          if(resp && resp.ok) input.value = resp.data || '';
+        });
+      }
+    }
+
+    // options dependent on RMP (byRMPColumn)
+    if(f.optionsSource && f.optionsSource.byRMPColumn){
+      // find RMP field in current form
+      const rmpField = page.fields.find(ff => /rmp/i.test((ff.label||'').toLowerCase()))?.id;
+      if(rmpField){
+        const src = form.querySelector('[name="'+rmpField+'"]');
+        if(src){
+          src.addEventListener('change', async ()=>{
+            const val = src.value; if(!val) { input.innerHTML = '<option value=\"\">-- sélectionnez --</option>'; return; }
+            const resp = await serverPost({action:'getOptionsForRMP', rmp: val, byColumn: f.optionsSource.byRMPColumn, targetColumn: f.optionsSource.targetColumn});
+            if(resp && resp.ok && resp.data){
+              input.innerHTML = '<option value=\"\">-- sélectionnez --</option>';
+              resp.data.forEach(o => input.appendChild(el('option',{value:o}, o)));
+            }
+          });
+        }
+      }
+    }
+
+    // computeAge: show warning if minor
+    if(f.computeAge){
+      input.addEventListener('change', ()=>{
+        if(!input.value) return;
+        const dob = new Date(input.value);
+        const diff = Date.now() - dob.getTime();
+        const age = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
+        if(age < 18){
+          if(!form.querySelector('.age-warning')){
+            const warn = el('div',{class:'error age-warning'}, 'Attention : L’inculpé est mineur !');
+            input.parentNode.appendChild(warn);
+          }
+        } else {
+          const warn = form.querySelector('.age-warning');
+          if(warn) warn.remove();
+        }
+      });
+    }
+
+
+    // dependsOn: set min date constraints dynamically
+    if(f.dependsOn && f.dependsOn.minDateField){
+      const minFieldId = Array.isArray(f.dependsOn.minDateField) ? f.dependsOn.minDateField[0] : f.dependsOn.minDateField;
+      const minInp = form.querySelector('[name="'+minFieldId+'"]');
+      if(minInp){
+        minInp.addEventListener('change', ()=> {
+          if(minInp.value) input.min = minInp.value;
+        });
+      }
+    }
+
+  });
+
+  // expose fields for programmatic use later
+  form._fields = fieldMap;
+}
+
+/* helper age calc */
+function calcAge(dob){
+  const now = new Date();
+  let age = now.getFullYear() - dob.getFullYear();
+  const m = now.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
+  return age;
+}
+
+/* ===========================
+   Form submit handling: validate -> server prechecks -> review modal -> final submit
+   =========================== */
+// Remplacer la fonction handleSubmit existante par celle-ci
+async function handleSubmit(page, form){
+  // afficher le spinner si la fonction existe
+  if (typeof showLoading === 'function') try { showLoading(form); } catch(e){ /* noop */ }
+
+  try {
+    const values = {};
+    const errors = [];
+
+    // --- Collecte & validations client ---
+    for (const f of page.fields) {
+      const input = form.querySelector('[name="' + f.id + '"]');
+      const val = input ? (input.value || '').toString().trim() : '';
+
+      // required
+      if (f.required && !val) { errors.push(f.label + ' est requis'); continue; }
+
+      // pattern
+      if (f.pattern && val) {
+        const re = new RegExp(f.pattern);
+        if (!re.test(val)) errors.push(f.label + ' format invalide');
+      }
+
+      // maxToday (autorise aujourd'hui)
+      if (f.maxToday && val) {
+        const d = new Date(val);
+        const today = new Date(); today.setHours(0,0,0,0);
+        const selected = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        if (selected.getTime() > today.getTime()) errors.push(f.label + ' ne peut être dans le futur');
+      }
+
+      // dependsOn minDateField
+      if (f.dependsOn && f.dependsOn.minDateField && val) {
+        const minField = Array.isArray(f.dependsOn.minDateField) ? f.dependsOn.minDateField[0] : f.dependsOn.minDateField;
+        const other = form.querySelector('[name="' + minField + '"]');
+        if (other && other.value && new Date(val) < new Date(other.value)) errors.push(f.label + ' ne peut être antérieure à ' + minField);
+      }
+
+      const rmpFields = ["Q2","Q5","Q13","Q17","Q23","Q26","Q29","Q32","Q35","Q38",
+        "Q42","Q46","Q50","Q54","Q60","Q65","Q77","Q79","Q85","Q86","Q87","Q88","Q90"];
+
+      if (rmpFields.includes(f.id) && val) {
+          const parts = val.split("/");
+          if (parts.length === 2) {
+              const letters = parts[1].trim().toUpperCase();
+
+              // exception : si ACCESS_INITIAL == MASTER_INITIAL → pas de restriction
+              if (ACCESS_INITIAL !== MASTER_INITIAL && letters !== ACCESS_INITIAL) {
+                  errors.push(f.label + " doit se terminer par /" + ACCESS_INITIAL);
+              }
+          }
+      }
+      values[f.id] = val;
+    }
+
+    if (errors.length) {
+      if (typeof hideLoading === 'function') try { hideLoading(form); } catch(e){ }
+      showModal('Erreurs de validation', '<ul><li>' + errors.join('</li><li>') + '</li></ul>', '<button class="btn" id="modalCloseErr">Fermer</button>');
+      qs('#modalCloseErr').onclick = hideModal;
+      return;
+    }
+
+    // --- Vérifications côté serveur (serverCheck) ---
+    for (const f of page.fields) {
+      if (!f.serverCheck) continue;
+      const checks = Array.isArray(f.serverCheck) ? f.serverCheck : [f.serverCheck];
+      for (const chk of checks) {
+        // construire payload de vérification (en reprenant ta logique)
+        let payload = Object.assign({ action: chk.action, value: values[f.id], column: chk.column, field: f.id }, chk);
+
+        if (chk.action === 'checkRMPAndInculpeMAP') {
+          payload.rmpValue = values[chk.rmpField];
+          payload.inculpeValue = values[chk.inculpeField];
+        }
+
+        if (chk.action === 'checkDuplicateQ59Q60') {
+          payload.q59Value = values[chk.q59Field];
+          payload.q60Value = values[chk.q60Field];
+        }
+
+        if (chk.action === 'checkPasswordMatchesInitial') {
+          payload.initialValue = values[chk.initialField];
+          payload.passwordValue = values[f.id];
+        }
+
+        if (chk.action === 'checkMagPasswordMatchesInitial') {
+          payload.initialValue = values[chk.initialField];
+          payload.value = values[f.id];
+        }
+
+        // cas particulier page18 (mustExistInColumnWithTypeAndEmpty)
+        if (chk.action === 'mustExistInColumnWithTypeAndEmpty') {
+          payload.typeValue = values[chk.typeField]; // ex: Q64
+        }
+
+        const resp = await serverPost(payload);
+        if (!resp || !resp.ok) {
+          if (typeof hideLoading === 'function') try { hideLoading(form); } catch(e){ }
+          showModal('Erreur vérification serveur', '<pre>' + (resp && (resp.msg || resp.error) ? (resp.msg || resp.error) : JSON.stringify(resp)) + '</pre>', '<button class="btn" id="modalCloseResp">Fermer</button>');
+          qs('#modalCloseResp').onclick = hideModal;
+          return;
+        }
+
+        if (resp.data && resp.data.allowed === false) {
+          if (typeof hideLoading === 'function') try { hideLoading(form); } catch(e){ }
+          showModal('Refus', '<p>' + (resp.msg || 'Valeur non autorisée par le serveur pour ' + f.label) + '</p>', '<button class="btn" id="modalCloseResp2">Fermer</button>');
+          qs('#modalCloseResp2').onclick = hideModal;
+          return;
+        }
+      }
+    }
+
+    // --- Préparer la page de révision ---
+    let html = '<div class="split">';
+    for (const f of page.fields) {
+      html += '<div class="card"><strong>' + f.label + '</strong><div class="muted" style="margin-top:6px;">' + (values[f.id] || '—') + '</div></div>';
+    }
+    html += '</div>';
+    const footer = '<button class="btn ghost" id="cancelSend">Annuler</button> <button class="btn" id="confirmSend">Envoyer</button>';
+
+    // masquer spinner avant d'ouvrir la modal de révision
+    if (typeof hideLoading === 'function') try { hideLoading(form); } catch(e){ }
+
+    showModal('Revue des réponses', html, footer);
+    qs('#cancelSend').onclick = hideModal;
+
+    // --- Envoi final au serveur après confirmation ---
+    qs('#confirmSend').onclick = async () => {
+      hideModal();
+      if (typeof showLoading === 'function') try { showLoading(form); } catch(e){ }
+
+      try {
+        // submitToServer doit renvoyer l'objet réponse du serveur (resp)
+        const resp = await submitToServer(page, values);
+
+        // si submitToServer a déjà affiché des modales côté client, on affiche quand même
+        // la réponse brute du serveur pour s'assurer que c'est bien son message qui apparaisse.
+        if (!resp) {
+          showModal('Erreur', '<p>Aucune réponse du serveur.</p>', '<button class="btn" onclick="hideModal()">OK</button>');
+        } else {
+          // afficher le message exact renvoyé par le serveur (resp.msg ou resp.error ou resp.raw)
+          const txt = resp.msg || resp.error || resp.raw || (resp.data && resp.data.msg) || JSON.stringify(resp);
+          if (resp.ok) {
+            showModal('Succès ✅', '<p>' + txt + '</p>', '<button class="btn" onclick="hideModal()">OK</button>');
+            // reset du formulaire et application des valeurs par défaut si présentes
+            form.reset();
+            page.fields.forEach(f => {
+              if (f.defaultValue !== undefined) {
+                const inp = form.querySelector('[name="' + f.id + '"]');
+                if (inp) inp.value = f.defaultValue;
+              }
+            });
+          } else {
+            showModal('Erreur', '<pre>' + txt + '</pre>', '<button class="btn" onclick="hideModal()">OK</button>');
+          }
+        }
+      } catch (err) {
+        showModal('Erreur', '<p>Erreur lors de l\'envoi : ' + (err && err.message ? err.message : String(err)) + '</p>', '<button class="btn" onclick="hideModal()">OK</button>');
+      } finally {
+        if (typeof hideLoading === 'function') try { hideLoading(form); } catch(e){ }
+      }
+    };
+
+  } catch (err) {
+    if (typeof hideLoading === 'function') try { hideLoading(form); } catch(e){ }
+    showModal('Erreur', '<pre>Erreur inattendue : ' + (err && err.message ? err.message : String(err)) + '</pre>');
+  }
+}
+
+/* ===========================
+   Loading overlay helpers
+   =========================== */
+
+function showLoading(form){
+  let overlay = form.querySelector('.loadingOverlay');
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.className = 'loadingOverlay';
+    Object.assign(overlay.style,{
+      position: 'absolute',
+      inset: 0,
+      background: 'rgba(0,0,0,0.4)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 10,
+      borderRadius: '10px'
+    });
+    overlay.innerHTML = `<div style="padding:20px;background:var(--card);border-radius:12px;display:flex;align-items:center;gap:10px;">
+      <i class="fas fa-spinner fa-spin"></i> Envoi en cours...
+    </div>`;
+    form.style.position = 'relative';
+    form.appendChild(overlay);
+  }
+  overlay.style.display = 'flex';
+}
+
+function hideLoading(form){
+  const overlay = form.querySelector('.loadingOverlay');
+  if(overlay) overlay.style.display = 'none';
+}
+
+
+/* ===========================
+   submitToServer : associe les types de soumission aux actions du serveur
+   =========================== */
+async function submitToServer(page, values) {
+  try {
+    const s = page.submit;
+    if (!s) return { ok: false, msg: "Aucune action définie pour cette page." };
+
+    // --- appendRange ---
+    if (s.type === "appendRange") {
+      const arr = s.cols.map(c => values[c] || "");
+      const resp = await serverPost({
+        action: "appendRange",
+        rangeStart: s.rangeStart,
+        rangeEnd: s.rangeEnd,
+        startRow: s.startRow,
+        values: JSON.stringify(arr)
+      });
+      return resp;
+    }
+
+    // --- addMagistrate ---
+    if (s.type === "addMagistrate") {
+      const resp = await serverPost({
+        action: "addMagistrate",
+        data: JSON.stringify(values)
+      });
+      return resp;
+    }
+
+    // --- updateForRow ---
+    if (s.type === "updateForRow") {
+      const valueToWrite = values[s.fieldToWrite] || "";
+      const resp = await serverPost({
+        action: "updateCellForMatch",
+        matchColumn: s.matchColumn,
+        matchValue: values[s.matchField],
+        targetColumn: s.targetColumn,
+        value: valueToWrite
+      });
+      return resp;
+    }
+
+    // --- updateForRowPrepend ---
+    if (s.type === "updateForRowPrepend") {
+      const valueToWrite = values[s.fieldToWrite] || "";
+      const resp = await serverPost({
+        action: "prependCellForMatch",
+        matchColumn: s.matchColumn,
+        matchValue: values[s.matchField],
+        targetColumn: s.targetColumn,
+        value: valueToWrite
+      });
+      return resp;
+    }
+
+    // --- setCells (Rapports parquet / magistrat) ---
+    if (s.type === "setCells") {
+      const payload = {
+        action: "setCells",
+        targetCells: JSON.stringify(s.targetCells),
+        values: JSON.stringify(values),
+        postAction: s.postAction ? JSON.stringify(s.postAction) : null
+      };
+      const resp = await serverPost(payload);
+      return resp;
+    }
+
+    // --- updateRowCells ---
+    if (s.type === "updateRowCells") {
+      const updateMap = {};
+      for (const col in s.updateMap)
+        updateMap[col] = values[s.updateMap[col]] || "";
+      const resp = await serverPost({
+        action: "updateRowCells",
+        matchColumn: s.matchColumn,
+        matchValue: values[s.matchField],
+        updateMap: JSON.stringify(updateMap)
+      });
+      return resp;
+    }
+
+    // --- Changement de mot de passe magistrat ---
+    if (s.type === "changeMagPassword") {
+      const resp = await serverPost({
+        action: "changeMagPassword",
+        initialValue: values[s.initialField],
+        newPassword: values[s.newPwdField]
+      });
+      return resp;
+    }
+
+    // --- Consultation RMP ---
+    if (s.type === "consultRMP") {
+      const resp = await serverPost({
+        action: "consultRMP",
+        rmp: values["Q77"]
+      });
+      return resp;
+    }
+
+    // --- Recherche détenu ---
+    if (s.type === "searchDetenu") {
+      const resp = await serverPost({
+        action: "searchDetenu",
+        name: values["Q78"]
+      });
+      return resp;
+    }
+
+    // --- Annuler suite RMP ---
+    if (s.type === "cancelSuiteRMP") {
+      const rmp = values[s.rmpField];
+      const conf = confirm(
+        "Voulez-vous réellement annuler la suite donnée au dossier RMP " + rmp + " ?"
+      );
+      if (!conf) return { ok: false, msg: "Action annulée par l'utilisateur." };
+      const resp = await serverPost({ action: "cancelSuiteRMP", rmp: rmp });
+      return resp;
+    }
+
+    // --- Effacer N° RMP ---
+    if (s.type === "deleteRMP") {
+      const rmp = values[s.rmpField];
+      const conf = confirm(
+        "Voulez-vous réellement effacer le dossier RMP " + rmp + " ?"
+      );
+      if (!conf) return { ok: false, msg: "Action annulée par l'utilisateur." };
+      const resp = await serverPost({ action: "deleteRMP", rmp: rmp });
+      return resp;
+    }
+
+    // --- Remplacer N° RMP ---
+    if (s.type === "replaceRMP") {
+      const resp = await serverPost({
+        action: "replaceRMP",
+        oldRMP: values["Q87"],
+        newRMP: values["Q88"]
+      });
+      return resp;
+    }
+
+    // --- Modifier autre dossier ---
+    if (s.type === "editAutreDossier") {
+      const type = values[s.typeField];
+      const num = values[s.numField];
+      const resp = await serverPost({ action: "editAutreDossier", type, num });
+      return resp;
+    }
+
+    // --- Clôture autre dossier ---
+    if (s.type === "closeOtherDossier") {
+      const payload = {
+        action: "closeOtherDossier",
+        type: values[s.typeField],
+        dossierNum: values[s.dossierField],
+        dateCloture: values[s.dateField],
+        motif: values[s.motifField]
+      };
+      const resp = await serverPost(payload);
+      return resp;
+    }
+
+    // --- Sauvegarde des modifications d’un autre dossier ---
+    if (s.type === "saveEditAutreDossier") {
+      const resp = await serverPost({
+        action: "saveEditedAutreDossier",
+        type: values[s.typeField],
+        num: values[s.numField],
+        newValues: JSON.stringify(values)
+      });
+      return resp;
+    }
+
+    // --- Fallback ---
+    return { ok: false, msg: "Action non implémentée : " + s.type };
+  } catch (e) {
+    return {
+      ok: false,
+      msg: "Erreur interne submitToServer : " + (e.message || e.toString())
+    };
+  }
+}
+
+/* ===========================
+   serverPost : envoi des requêtes au serveur
+   - Utilise fetch API pour POST JSON
+   - Gère les erreurs réseau et de parsing JSON
+   =========================== */
+// Retourne une chaîne lisible à afficher à l'utilisateur à partir de la réponse serveur
+function getServerMessage(resp){
+  if(!resp) return '';
+  // cas réussite avec data primitive (string/number) -> on renvoie data directement
+  if(resp.ok === true && (typeof resp.data === 'string' || typeof resp.data === 'number')) return resp.data;
+  // si le serveur fournit un msg explicite
+  if(resp.msg) return resp.msg;
+  // si data est un objet complexe -> pretty print JSON
+  if(resp.data && typeof resp.data === 'object') return JSON.stringify(resp.data, null, 2);
+  // si serveur a renvoyé raw text (cas d'erreur de parsing)
+  if(resp.raw) return resp.raw;
+  // fallback
+  return JSON.stringify(resp);
+}
+
+
+/* ===========================
+   Initialize: build menu and show default page
+   =========================== */
+buildMenu();
+showPage('page2'); // default landing
+
+/* ===========================
+   Expose for debugging (optional)
+   =========================== */
+window.__GP = { pages, showPage, buildMenu, serverPost };
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js")
+    .then(() => console.log("Service worker registered"))
+    .catch(err => console.error("SW registration failed", err));
+}
+</script>
+</body>
+</html>
