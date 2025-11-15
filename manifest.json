@@ -1,5 +1,5 @@
 {
-  "name": "PARQUETAPP — Gestion des dossiers parquet PGI KIKWIT",
+  "name": "PARQUETAPP — Gestion des dossiers parquet de grande instance de KIKWIT",
   "short_name": "PARQUET-APP",
   "description": "Application complète de gestion des dossiers du parquet et du cabinet du magistrat.",
   "start_url": "/",
@@ -23,5 +23,6 @@
   ],
   "categories": ["productivity", "business", "utilities"]
 }
+
 
 
